@@ -8,19 +8,20 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
   html, body {
     margin: 0; padding: 0;
-    height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
     font-family: "Hiragino Maru Gothic ProN", "ヒラギノ丸ゴ ProN", "Yu Gothic", sans-serif;
     background: linear-gradient(180deg, #fff8d6 0%, #ffe0f0 50%, #d6f0ff 100%);
-    overflow: hidden;
     touch-action: manipulation;
   }
   .app {
-    height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px 16px;
-    gap: 16px;
+    padding: 12px 12px max(12px, env(safe-area-inset-bottom));
+    gap: 10px;
     position: relative;
   }
   .header {
@@ -31,23 +32,24 @@
     max-width: 560px;
   }
   .score {
-    font-size: 28px;
+    font-size: clamp(16px, 4.2vw, 22px);
     font-weight: 700;
     color: #ff7a00;
     background: #fff;
-    padding: 8px 18px;
+    padding: 6px 14px;
     border-radius: 999px;
-    box-shadow: 0 4px 0 #ffc98a;
+    box-shadow: 0 3px 0 #ffc98a;
+    white-space: nowrap;
   }
   .stars {
-    font-size: 24px;
+    font-size: clamp(14px, 4vw, 20px);
     background: #fff;
-    padding: 8px 14px;
+    padding: 6px 12px;
     border-radius: 999px;
-    box-shadow: 0 4px 0 #ffd96a;
-    min-width: 120px;
+    box-shadow: 0 3px 0 #ffd96a;
     text-align: center;
     letter-spacing: 2px;
+    white-space: nowrap;
   }
   .mode-row {
     display: flex;
@@ -56,14 +58,15 @@
   .mode-btn {
     border: none;
     background: #fff;
-    font-size: 20px;
+    font-size: clamp(14px, 4vw, 18px);
     font-weight: 700;
-    padding: 10px 18px;
+    padding: 8px 14px;
     border-radius: 999px;
-    box-shadow: 0 4px 0 #c8d8f0;
+    box-shadow: 0 3px 0 #c8d8f0;
     cursor: pointer;
     color: #4a6aa8;
     font-family: inherit;
+    white-space: nowrap;
   }
   .mode-btn.active {
     background: #4a9aff;
@@ -77,14 +80,15 @@
   .level-btn {
     border: none;
     background: #fff;
-    font-size: 18px;
+    font-size: clamp(13px, 3.6vw, 16px);
     font-weight: 700;
-    padding: 8px 14px;
+    padding: 6px 12px;
     border-radius: 999px;
     box-shadow: 0 3px 0 #f0c8d8;
     cursor: pointer;
     color: #d46693;
     font-family: inherit;
+    white-space: nowrap;
   }
   .level-btn.active {
     background: #ff8ab8;
@@ -92,49 +96,51 @@
     box-shadow: 0 3px 0 #d46693;
   }
   .question-card {
-    flex: 1;
+    flex: 1 1 auto;
     width: 100%;
     max-width: 560px;
     background: #fff;
-    border-radius: 28px;
-    box-shadow: 0 8px 0 #ffc98a, 0 16px 40px rgba(0,0,0,0.08);
+    border-radius: 24px;
+    box-shadow: 0 6px 0 #ffc98a, 0 12px 30px rgba(0,0,0,0.08);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 24px;
-    gap: 18px;
-    min-height: 300px;
+    padding: 16px;
+    gap: 12px;
+    min-height: 0;
+    overflow: hidden;
   }
   .apples {
-    font-size: clamp(36px, 9vw, 56px);
-    line-height: 1.2;
+    font-size: clamp(28px, 7vw, 50px);
+    line-height: 1.15;
     text-align: center;
-    word-break: break-all;
+    word-break: break-word;
   }
   .equation {
-    font-size: clamp(44px, 11vw, 64px);
+    font-size: clamp(34px, 9vw, 56px);
     font-weight: 900;
     color: #333;
-    letter-spacing: 4px;
+    letter-spacing: 3px;
   }
   .answers {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
+    gap: 10px;
     width: 100%;
     max-width: 560px;
+    flex-shrink: 0;
   }
   .ans-btn {
     font-family: inherit;
-    font-size: clamp(40px, 10vw, 56px);
+    font-size: clamp(32px, 8.5vw, 52px);
     font-weight: 900;
     color: #fff;
     background: #ff8ab8;
     border: none;
-    border-radius: 24px;
-    padding: 22px 0;
-    box-shadow: 0 6px 0 #d46693;
+    border-radius: 20px;
+    padding: 16px 0;
+    box-shadow: 0 5px 0 #d46693;
     cursor: pointer;
     transition: transform 0.08s, box-shadow 0.08s;
   }
