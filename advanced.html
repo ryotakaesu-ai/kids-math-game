@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>けいさん チャレンジ 🔥</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body {
+    margin: 0; padding: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    font-family: "Hiragino Maru Gothic ProN", "ヒラギノ丸ゴ ProN", "Yu Gothic", sans-serif;
+    background: linear-gradient(160deg, #1a1a3e 0%, #2d1b5e 50%, #4a1e7a 100%);
+    color: #fff;
+    touch-action: manipulation;
+    overflow: hidden;
+  }
+  .app {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 12px max(12px, env(safe-area-inset-bottom));
+    gap: 8px;
+    position: relative;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* 戻るリンク */
+  .back {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    font-size: 14px;
+    background: rgba(255,255,255,0.1);
+    padding: 6px 12px;
+    border-radius: 999px;
+    z-index: 5;
+  }
+
+  /* ステータスバー */
+  .status {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    margin-top: 36px;
+  }
+  .stat {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    padding: 8px 6px;
+    text-align: center;
+    font-weight: 700;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 1px;
+  }
+  .stat-value {
+    font-size: clamp(18px, 5vw, 24px);
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat.streak .stat-value { color: #ffb14d; }
+  .stat.score .stat-value  { color: #ffd84d; }
+  .stat.time  .stat-value  { color: #6adfff; }
+  .stat.time.low .stat-value { color: #ff5c7a; animation: pulse 0.5s infinite; }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+
+  /* モードタブ */
+  .modes {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .modes::-webkit-scrollbar { display: none; }
+  .mode-btn {
+    flex: 1;
+    min-width: 0;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.7);
+    font-family: inherit;
+    font-size: clamp(13px, 3.6vw, 15px);
+    font-weight: 700;
+    padding: 9px 4px;
+    border-radius: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .mode-btn.active {
+    background: linear-gradient(135deg, #ff5c7a, #ff9a4d);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(255,92,122,0.4);
+  }
+
+  /* 問題エリア */
+  .question-card {
+    width: 100%;
+    flex: 1 1 auto;
+    background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    gap: 14px;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4dd97a, #6adfff);
+    transition: width 0.3s;
+  }
+  .progress-text {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 2px;
+  }
+  .equation {
+    font-size: clamp(36px, 10vw, 56px);
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+  .input-display {
+    background: rgba(0,0,0,0.3);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 14px;
+    padding: 10px 20px;
+    font-size: clamp(28px, 8vw, 44px);
+    font-weight: 900;
+    min-width: 140px;
+    text-align: center;
+    color: #ffd84d;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 3px;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .input-display.empty { color: rgba(255,255,255,0.3); }
+
+  /* キーパッド */
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    width: 100%;
+    flex-shrink: 0;
+  }
+  .key {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    font-family: inherit;
+    font-size: clamp(22px, 6.5vw, 30px);
+    font-weight: 900;
+    padding: 14px 0;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: transform 0.05s, background 0.1s;
+    font-variant-numeric: tabular-nums;
+  }
+  .key:active {
+    transform: scale(0.94);
+    background: rgba(255,255,255,0.25);
+  }
+  .key.del {
+    background: rgba(255,92,122,0.25);
+    border-color: rgba(255,92,122,0.4);
+  }
+  .key.ok {
+    background: linear-gradient(135deg, #4dd97a, #6adfff);
+    border-color: transparent;
+    font-size: clamp(18px, 5vw, 22px);
+    color: #1a1a3e;
+  }
+
+  /* フィードバック */
+  .feedback {
+    position: fixed;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: clamp(50px, 14vw, 90px);
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 100;
+    white-space: nowrap;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  .feedback.show { animation: burst 0.9s; }
+  @keyframes burst {
+    0% { transform: translate(-50%,-50%) scale(0) rotate(-20deg); opacity: 0; }
+    25% { transform: translate(-50%,-50%) scale(1.3) rotate(8deg); opacity: 1; }
+    60% { transform: translate(-50%,-50%) scale(1) rotate(-3deg); opacity: 1; }
+    100% { transform: translate(-50%,-50%) scale(0.7) rotate(0); opacity: 0; }
+  }
+  .score-pop {
+    position: fixed;
+    font-size: clamp(20px, 5vw, 28px);
+    font-weight: 900;
+    color: #ffd84d;
+    pointer-events: none;
+    z-index: 99;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    animation: float-up 1s forwards;
+  }
+  @keyframes float-up {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-80px); opacity: 0; }
+  }
+
+  /* シェイク */
+  .shake { animation: shake 0.4s; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+  }
+
+  /* 結果モーダル */
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,10,30,0.9);
+    backdrop-filter: blur(12px);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 20px;
+    z-index: 200;
+    text-align: center;
+  }
+  .modal.show { display: flex; animation: fade 0.3s; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .rank {
+    font-size: clamp(80px, 22vw, 140px);
+    font-weight: 900;
+    line-height: 1;
+    text-shadow: 0 6px 30px currentColor;
+    animation: rank-in 0.8s;
+  }
+  @keyframes rank-in {
+    0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+    60% { transform: scale(1.2) rotate(10deg); }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  .rank.S { color: #ffd84d; }
+  .rank.A { color: #ff9a4d; }
+  .rank.B { color: #6adfff; }
+  .rank.C { color: #c0c0c0; }
+  .result-title {
+    font-size: clamp(24px, 6vw, 32px);
+    font-weight: 900;
+    margin: 0;
+  }
+  .result-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 16px;
+    padding: 16px 24px;
+    font-size: 18px;
+    font-weight: 700;
+    min-width: 240px;
+  }
+  .result-stats .row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .result-stats .row span:last-child {
+    color: #ffd84d;
+    font-variant-numeric: tabular-nums;
+  }
+  .retry-btn {
+    background: linear-gradient(135deg, #ff5c7a, #ff9a4d);
+    border: none;
+    color: #fff;
+    font-family: inherit;
+    font-size: 22px;
+    font-weight: 900;
+    padding: 14px 32px;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(255,92,122,0.4);
+  }
+  .retry-btn:active { transform: translateY(3px); }
+
+  /* パーティクル */
+  .particle {
+    position: fixed;
+    pointer-events: none;
+    font-size: 24px;
+    z-index: 95;
+    animation: particle-fly 1s forwards;
+  }
+  @keyframes particle-fly {
+    0% { opacity: 1; }
+    100% { opacity: 0; transform: var(--end-transform); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <a href="index.html" class="back">← かんたんモード</a>
+
+  <div class="status">
+    <div class="stat time" id="timeStat">
+      <div class="stat-label">のこり</div>
+      <div class="stat-value"><span id="timer">15</span>s</div>
+    </div>
+    <div class="stat score">
+      <div class="stat-label">スコア</div>
+      <div class="stat-value" id="score">0</div>
+    </div>
+    <div class="stat streak">
+      <div class="stat-label">コンボ</div>
+      <div class="stat-value"><span id="streak">0</span>🔥</div>
+    </div>
+  </div>
+
+  <div class="modes">
+    <button class="mode-btn active" data-mode="add">たしざん</button>
+    <button class="mode-btn" data-mode="sub">ひきざん</button>
+    <button class="mode-btn" data-mode="mul">かけざん</button>
+    <button class="mode-btn" data-mode="mix">ミックス</button>
+  </div>
+
+  <div class="question-card" id="card">
+    <div class="progress-bar"><div class="progress-bar-fill" id="progressBar" style="width:0%"></div></div>
+    <div class="progress-text" id="progress">1 / 10</div>
+    <div class="equation" id="equation">47 + 28 = ?</div>
+    <div class="input-display empty" id="inputDisplay">_</div>
+  </div>
+
+  <div class="keypad">
+    <button class="key" data-k="1">1</button>
+    <button class="key" data-k="2">2</button>
+    <button class="key" data-k="3">3</button>
+    <button class="key" data-k="4">4</button>
+    <button class="key" data-k="5">5</button>
+    <button class="key" data-k="6">6</button>
+    <button class="key" data-k="7">7</button>
+    <button class="key" data-k="8">8</button>
+    <button class="key" data-k="9">9</button>
+    <button class="key del" data-k="del">⌫</button>
+    <button class="key" data-k="0">0</button>
+    <button class="key ok" data-k="ok">こたえる</button>
+  </div>
+
+  <div class="feedback" id="feedback"></div>
+
+  <div class="modal" id="modal">
+    <div class="rank" id="rank">S</div>
+    <h2 class="result-title" id="resultTitle">クリア！</h2>
+    <div class="result-stats">
+      <div class="row"><span>スコア</span><span id="finalScore">0</span></div>
+      <div class="row"><span>せいかい</span><span id="finalCorrect">0 / 10</span></div>
+      <div class="row"><span>さいだい コンボ</span><span id="finalStreak">0 🔥</span></div>
+      <div class="row"><span>タイム</span><span id="finalTime">0s</span></div>
+    </div>
+    <button class="retry-btn" onclick="startGame()">もういちど</button>
+  </div>
+</div>
+
+<script>
+// ===== 音 =====
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function beep(freqs, dur = 0.12, type = 'sine', vol = 0.25) {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  freqs.forEach((f, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = f;
+    const t0 = audioCtx.currentTime + i * dur;
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(vol, t0 + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur);
+  });
+}
+const sndKey     = () => beep([800], 0.04, 'square', 0.1);
+const sndCorrect = () => beep([523, 659, 784, 1046], 0.1, 'triangle', 0.3);
+const sndCombo   = () => beep([784, 988, 1175, 1568], 0.08, 'triangle', 0.3);
+const sndWrong   = () => beep([300, 200], 0.2, 'sawtooth', 0.25);
+const sndTimeout = () => beep([400, 300, 200], 0.18, 'sawtooth', 0.25);
+const sndVictory = () => beep([523, 659, 784, 1046, 1319, 1568, 2093], 0.12, 'triangle', 0.3);
+
+// ===== ゲーム状態 =====
+const TOTAL = 10;
+const TIME_PER_Q = 15;
+let mode = 'add';
+let qIndex = 0;
+let score = 0;
+let streak = 0;
+let maxStreak = 0;
+let correctCount = 0;
+let currentAnswer = 0;
+let inputValue = '';
+let timerId = null;
+let timeLeft = TIME_PER_Q;
+let gameStart = 0;
+let locked = false;
+
+const $ = id => document.getElementById(id);
+const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+function makeProblem() {
+  let actual = mode;
+  if (mode === 'mix') {
+    actual = ['add','sub','mul'][rand(0,2)];
+  }
+  let a, b, ans, text;
+  if (actual === 'add') {
+    a = rand(10, 99);
+    b = rand(10, 99);
+    ans = a + b;
+    text = `${a} + ${b}`;
+  } else if (actual === 'sub') {
+    a = rand(30, 99);
+    b = rand(10, a - 1);
+    ans = a - b;
+    text = `${a} − ${b}`;
+  } else {
+    a = rand(11, 99);
+    b = rand(2, 9);
+    ans = a * b;
+    text = `${a} × ${b}`;
+  }
+  currentAnswer = ans;
+  $('equation').textContent = `${text} = ?`;
+}
+
+function updateInputDisplay() {
+  const el = $('inputDisplay');
+  if (inputValue === '') {
+    el.textContent = '_';
+    el.classList.add('empty');
+  } else {
+    el.textContent = inputValue;
+    el.classList.remove('empty');
+  }
+}
+
+function startTimer() {
+  stopTimer();
+  timeLeft = TIME_PER_Q;
+  $('timer').textContent = timeLeft;
+  $('timeStat').classList.remove('low');
+  updateProgressBar();
+  timerId = setInterval(() => {
+    timeLeft--;
+    $('timer').textContent = timeLeft;
+    if (timeLeft <= 5) $('timeStat').classList.add('low');
+    updateProgressBar();
+    if (timeLeft <= 0) {
+      stopTimer();
+      handleTimeout();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerId) { clearInterval(timerId); timerId = null; }
+}
+
+function updateProgressBar() {
+  $('progressBar').style.width = (timeLeft / TIME_PER_Q * 100) + '%';
+}
+
+function handleTimeout() {
+  if (locked) return;
+  locked = true;
+  sndTimeout();
+  streak = 0;
+  $('streak').textContent = streak;
+  showFeedback('タイムアップ', '#ff5c7a');
+  setTimeout(nextProblem, 1000);
+}
+
+function handleSubmit() {
+  if (locked || inputValue === '') return;
+  locked = true;
+  stopTimer();
+  const num = parseInt(inputValue, 10);
+  if (num === currentAnswer) {
+    correctCount++;
+    streak++;
+    if (streak > maxStreak) maxStreak = streak;
+    const base = 100;
+    const timeBonus = timeLeft * 10;
+    const comboBonus = (streak - 1) * 50;
+    const gained = base + timeBonus + comboBonus;
+    animateScore(gained);
+    if (streak >= 3) {
+      sndCombo();
+      showFeedback(`${streak} コンボ！`, '#ff9a4d');
+    } else {
+      sndCorrect();
+      showFeedback('せいかい！', '#4dd97a');
+    }
+    burstParticles();
+  } else {
+    sndWrong();
+    streak = 0;
+    $('streak').textContent = streak;
+    $('card').classList.add('shake');
+    setTimeout(() => $('card').classList.remove('shake'), 400);
+    showFeedback(`ざんねん… ${currentAnswer}`, '#ff5c7a');
+  }
+  setTimeout(nextProblem, 1200);
+}
+
+function animateScore(gained) {
+  const target = score + gained;
+  const start = score;
+  const dur = 500;
+  const t0 = performance.now();
+  function step(now) {
+    const p = Math.min(1, (now - t0) / dur);
+    score = Math.round(start + (target - start) * p);
+    $('score').textContent = score;
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+  $('streak').textContent = streak;
+
+  // +XX のポップアップ
+  const pop = document.createElement('div');
+  pop.className = 'score-pop';
+  pop.textContent = `+${gained}`;
+  const rect = $('card').getBoundingClientRect();
+  pop.style.left = (rect.left + rect.width / 2) + 'px';
+  pop.style.top = (rect.top + rect.height / 2) + 'px';
+  document.body.appendChild(pop);
+  setTimeout(() => pop.remove(), 1000);
+}
+
+function showFeedback(text, color) {
+  const el = $('feedback');
+  el.textContent = text;
+  el.style.color = color;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+}
+
+function burstParticles() {
+  const emojis = ['✨','⭐','💫','🌟'];
+  const rect = $('card').getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = emojis[i % emojis.length];
+    p.style.left = cx + 'px';
+    p.style.top = cy + 'px';
+    const angle = (Math.PI * 2 * i) / 12;
+    const dist = 80 + Math.random() * 60;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+    p.style.setProperty('--end-transform', `translate(${dx}px, ${dy}px) rotate(${Math.random()*720}deg) scale(0.3)`);
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1000);
+  }
+}
+
+function nextProblem() {
+  qIndex++;
+  inputValue = '';
+  updateInputDisplay();
+  locked = false;
+  if (qIndex >= TOTAL) {
+    endGame();
+    return;
+  }
+  $('progress').textContent = `${qIndex + 1} / ${TOTAL}`;
+  makeProblem();
+  startTimer();
+}
+
+function endGame() {
+  stopTimer();
+  sndVictory();
+  const elapsed = Math.round((performance.now() - gameStart) / 1000);
+  const rate = correctCount / TOTAL;
+  let rank, title;
+  if (score >= 1800) { rank = 'S'; title = 'パーフェクト！'; }
+  else if (score >= 1200) { rank = 'A'; title = 'すごい！'; }
+  else if (score >= 600) { rank = 'B'; title = 'いいね！'; }
+  else { rank = 'C'; title = 'つぎはもっと！'; }
+
+  const rankEl = $('rank');
+  rankEl.textContent = rank;
+  rankEl.className = 'rank ' + rank;
+  $('resultTitle').textContent = title;
+  $('finalScore').textContent = score;
+  $('finalCorrect').textContent = `${correctCount} / ${TOTAL}`;
+  $('finalStreak').textContent = `${maxStreak} 🔥`;
+  $('finalTime').textContent = `${elapsed}s`;
+  $('modal').classList.add('show');
+}
+
+function startGame() {
+  $('modal').classList.remove('show');
+  qIndex = 0;
+  score = 0;
+  streak = 0;
+  maxStreak = 0;
+  correctCount = 0;
+  inputValue = '';
+  locked = false;
+  gameStart = performance.now();
+  $('score').textContent = '0';
+  $('streak').textContent = '0';
+  $('progress').textContent = `1 / ${TOTAL}`;
+  updateInputDisplay();
+  makeProblem();
+  startTimer();
+}
+
+// キーパッド
+document.querySelectorAll('.key').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (locked) return;
+    const k = btn.dataset.k;
+    if (k === 'del') {
+      inputValue = inputValue.slice(0, -1);
+      sndKey();
+    } else if (k === 'ok') {
+      handleSubmit();
+    } else {
+      if (inputValue.length < 4) {
+        inputValue += k;
+        sndKey();
+      }
+    }
+    updateInputDisplay();
+  });
+});
+
+// ハードウェアキーボード
+document.addEventListener('keydown', e => {
+  if (locked) return;
+  if (/^[0-9]$/.test(e.key)) {
+    if (inputValue.length < 4) { inputValue += e.key; sndKey(); updateInputDisplay(); }
+  } else if (e.key === 'Backspace') {
+    inputValue = inputValue.slice(0, -1); sndKey(); updateInputDisplay();
+  } else if (e.key === 'Enter') {
+    handleSubmit();
+  }
+});
+
+// モード切替
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mode = btn.dataset.mode;
+    startGame();
+  };
+});
+
+// iOS音解禁
+document.body.addEventListener('touchstart', () => {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}, { once: true });
+
+// 開始
+startGame();
+</script>
+</body>
+</html>
